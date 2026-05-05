@@ -7,25 +7,44 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: sans-serif; background-color: #1a1a1a; color: #e0e0e0; padding: 20px; text-align: center; }
-        h2 { color: #ff4d4d; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #ff4d4d; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .status { font-size: 0.8em; color: #888; margin-top: 10px; }
+        h2 { color: #ff4d4d; text-transform: uppercase; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        input, select { width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #ff4d4d; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .status { font-size: 0.8em; color: #888; margin-top: 15px; }
     </style>
 </head>
 <body>
     <h2>📍 НОВАЯ ЛОКАЦИЯ</h2>
-    <input type="text" id="name" placeholder="Название объекта">
-    <select id="condition">
-        <option value="Целый">Целый (люкс)</option>
-        <option value="Средний">Средний</option>
-        <option value="Руины">Руины</option>
-    </select>
-    <input type="text" id="access" placeholder="Доступ (залаз)">
-    <select id="security">
-        <option value="Нет">Нет охраны</option>
-        <option value="ЧОП/Сторож">ЧОП/Сторож</option>
-    </select>
+    
+    <div class="form-group">
+        <label>Название</label>
+        <input type="text" id="name" placeholder="Напр: Завод">
+    </div>
+
+    <div class="form-group">
+        <label>Состояние</label>
+        <select id="condition">
+            <option value="Целый">Целый</option>
+            <option value="Средний">Средний</option>
+            <option value="Руины">Руины</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Доступ (залаз)</label>
+        <input type="text" id="access" placeholder="Окно, забор...">
+    </div>
+
+    <div class="form-group">
+        <label>Охрана</label>
+        <select id="security">
+            <option value="Нет">Нет</option>
+            <option value="Есть">Есть</option>
+        </select>
+    </div>
+
     <button id="sendData">ОТПРАВИТЬ В БАЗУ</button>
     <div id="locationStatus" class="status">Определяем координаты...</div>
 
@@ -33,16 +52,21 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let coords = "50.2547, 28.6587"; // Житомир по дефолту
+        let coords = "50.2547, 28.6587"; // Житомир по умолчанию
 
         navigator.geolocation.getCurrentPosition((pos) => {
             coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
             document.getElementById('locationStatus').innerText = "📍 Координаты определены";
+        }, () => {
+            document.getElementById('locationStatus').innerText = "📍 Локация: Житомир";
         });
 
         document.getElementById('sendData').addEventListener('click', () => {
             const name = document.getElementById('name').value;
-            if (!name) return alert("Введите название!");
+            if (!name) {
+                alert("Введите название!");
+                return;
+            }
 
             const data = {
                 name: name,
@@ -52,7 +76,6 @@
                 coords: coords
             };
 
-            // Отправляем только текст. Окно закроется само.
             tg.sendData(JSON.stringify(data));
         });
     </script>
