@@ -4,75 +4,169 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URBEX HUB</title>
-    <!-- Подключаем скрипт Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #1a1a1a; color: #e0e0e0; padding: 20px; text-align: center; }
-        h2 { color: #ff4d4d; text-transform: uppercase; margin-bottom: 20px; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: #1a1a1a; 
+            color: #e0e0e0; 
+            margin: 0; 
+            padding: 0; 
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Контейнер для контента */
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            padding-bottom: 80px; /* Отступ под меню */
+        }
+
+        h2 { color: #ff4d4d; text-align: center; text-transform: uppercase; margin-top: 0; }
+        
         .form-group { margin-bottom: 15px; text-align: left; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
-        input, select { width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #ff4d4d; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 1.1em; }
-        .status { font-size: 0.8em; color: #888; margin-top: 15px; }
+        
+        input, select { 
+            width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; 
+            color: white; border-radius: 10px; box-sizing: border-box; 
+        }
+
+        button.main-btn { 
+            width: 100%; padding: 15px; background: #ff4d4d; color: white; 
+            border: none; border-radius: 10px; font-weight: bold; cursor: pointer; 
+            font-size: 1.1em; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
+        }
+
+        /* Нижнее навигационное меню */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background: #252525;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #333;
+            padding-bottom: env(safe-area-inset-bottom); /* Поддержка iPhone */
+        }
+
+        .nav-item {
+            color: #888;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .nav-item.active { color: #ff4d4d; }
+
+        .nav-icon { font-size: 1.5em; margin-bottom: 2px; }
+
+        .status { font-size: 0.8em; color: #666; text-align: center; margin-top: 15px; }
+
+        /* Скрытые разделы */
+        .page { display: none; }
+        .page.active { display: block; }
     </style>
 </head>
 <body>
-    <h2>📍 НОВАЯ ЛОКАЦИЯ</h2>
-    
-    <div class="form-group">
-        <label>Название объекта</label>
-        <input type="text" id="name" placeholder="Напр: Завод 'Звезда'">
+
+    <div class="content">
+        <!-- СТРАНИЦА: ДОБАВЛЕНИЕ (ГЛАВНАЯ) -->
+        <div id="add-page" class="page active">
+            <h2>📍 Новая точка</h2>
+            <div class="form-group">
+                <label>Название</label>
+                <input type="text" id="name" placeholder="Напр: Химволокно">
+            </div>
+            <div class="form-group">
+                <label>Состояние</label>
+                <select id="condition">
+                    <option value="Целый">Целый (люкс)</option>
+                    <option value="Средний">Средний</option>
+                    <option value="Руины">Руины</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Залаз</label>
+                <input type="text" id="access" placeholder="Окно, забор...">
+            </div>
+            <div class="form-group">
+                <label>Охрана</label>
+                <select id="security">
+                    <option value="Нет">Нет охраны</option>
+                    <option value="Есть">Есть охрана</option>
+                </select>
+            </div>
+            <button class="main-btn" id="sendData">ОТПРАВИТЬ В БАЗУ</button>
+            <div id="locationStatus" class="status">Определяем координаты...</div>
+        </div>
+
+        <!-- СТРАНИЦА: КАРТА -->
+        <div id="map-page" class="page">
+            <h2>🗺 Карта объектов</h2>
+            <p style="text-align: center; color: #888;">Раздел в разработке...</p>
+        </div>
+
+        <!-- СТРАНИЦА: ПРОФИЛЬ -->
+        <div id="profile-page" class="page">
+            <h2>👤 Профиль</h2>
+            <p id="user-info" style="text-align: center;"></p>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label>Состояние (сохран)</label>
-        <select id="condition">
-            <option value="Целый">Целый (люкс)</option>
-            <option value="Средний">Средний</option>
-            <option value="Руины">Руины</option>
-        </select>
-    </div>
+    <!-- НИЖНЕЕ МЕНЮ -->
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="showPage('add-page', this)">
+            <span class="nav-icon">➕</span>
+            <span>Добавить</span>
+        </div>
+        <div class="nav-item" onclick="showPage('map-page', this)">
+            <span class="nav-icon">🗺</span>
+            <span>Карта</span>
+        </div>
+        <div class="nav-item" onclick="showPage('profile-page', this)">
+            <span class="nav-icon">👤</span>
+            <span>Профиль</span>
+        </div>
+    </nav>
 
-    <div class="form-group">
-        <label>Доступ (залаз)</label>
-        <input type="text" id="access" placeholder="Окно, дыра в заборе...">
-    </div>
-
-    <div class="form-group">
-        <label>Охрана</label>
-        <select id="security">
-            <option value="Нет">Нет охраны</option>
-            <option value="ЧОП/Сторож">ЧОП/Сторож</option>
-            <option value="Камеры">Камеры</option>
-        </select>
-    </div>
-
-    <button id="sendData">ОТПРАВИТЬ В БАЗУ</button>
-    <div id="locationStatus" class="status">Определяем координаты...</div>
-
-    <!-- Твой код теперь внутри тега script, он будет работать невидимо -->
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let coords = "50.2547, 28.6587"; // Дефолт Житомир
+        // Показ имени в профиле
+        document.getElementById('user-info').innerText = "Сталкер: " + (tg.initDataUnsafe.user?.first_name || "Аноним");
 
-        // Получаем геопозицию
+        let coords = "50.2547, 28.6587";
+
         navigator.geolocation.getCurrentPosition((pos) => {
             coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
             document.getElementById('locationStatus').innerText = "📍 Координаты определены";
-        }, () => {
-            document.getElementById('locationStatus').innerText = "📍 Используем стандартные координаты";
         });
 
-        // Слушаем нажатие на кнопку
+        // Переключение страниц
+        function showPage(pageId, element) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active');
+            element.classList.add('active');
+        }
+
         document.getElementById('sendData').addEventListener('click', () => {
             const name = document.getElementById('name').value;
-            
-            if (!name) {
-                alert("Введите название объекта!");
-                return;
-            }
+            if (!name) return alert("Введите название!");
 
             const data = {
                 name: name,
@@ -82,7 +176,6 @@
                 coords: coords
             };
 
-            // Отправляем данные боту и закрываем окно
             tg.sendData(JSON.stringify(data));
         });
     </script>
