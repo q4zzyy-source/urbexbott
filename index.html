@@ -1,23 +1,103 @@
-<div id="app" style="background: #1a1a1a; color: white; padding: 20px; font-family: sans-serif;">
-    <h2 style="color: #39FF14;">ДОБАВИТЬ ОБЪЕКТ</h2>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URBEX HUB - Добавить объект</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+            margin: 0;
+        }
+        h2 { color: #ff4d4d; text-align: center; text-transform: uppercase; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:active { background: #cc0000; }
+        .hint { font-size: 0.8em; color: #888; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h2>📍 Новая локация</h2>
     
-    <label>Название:</label>
-    <input type="text" placeholder="Завод, усадьба..." style="width:100%; margin-bottom:15px; background:#333; border:1px solid #555; color:white;">
+    <div class="form-group">
+        <label>Название объекта</label>
+        <input type="text" id="name" placeholder="Напр: Заброшенный завод">
+    </div>
 
-    <label>Сохран (1-10):</label>
-    <select style="width:100%; margin-bottom:15px; background:#333; color:white;">
-        <option>Идеал</option>
-        <option>Средне</option>
-        <option>Тлен</option>
-    </select>
+    <div class="form-group">
+        <label>Состояние (сохран)</label>
+        <select id="condition">
+            <option value="Целый">Целый (люкс)</option>
+            <option value="Средний">Средний (подзаброшен)</option>
+            <option value="Руины">Руины / Дестрой</option>
+        </select>
+    </div>
 
-    <label>Охрана:</label>
-    <input type="text" placeholder="ЧОП, собаки, нет..." style="width:100%; margin-bottom:15px; background:#333; border:1px solid #555; color:white;">
+    <div class="form-group">
+        <label>Доступ (залаз)</label>
+        <input type="text" id="access" placeholder="Окно, дыра в заборе, дверь...">
+    </div>
 
-    <label>Залаз:</label>
-    <textarea placeholder="Где дырка в заборе?" style="width:100%; height:80px; background:#333; border:1px solid #555; color:white;"></textarea>
+    <div class="form-group">
+        <label>Охрана</label>
+        <select id="security">
+            <option value="Нет">Нет охраны</option>
+            <option value="ЧОП">ЧОП / Сторож</option>
+            <option value="Камеры">Камеры / Сигналка</option>
+            <option value="Собаки">Собаки</option>
+        </select>
+    </div>
 
-    <button style="width:100%; background:#39FF14; color:black; font-weight:bold; padding:10px; border:none; border-radius:5px;">
-        ОТПРАВИТЬ В ХАБ
-    </button>
-</div>
+    <button id="sendData">ОТПРАВИТЬ В БАЗУ</button>
+    <p class="hint">Данные будут мгновенно добавлены в URBEX HUB</p>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
+
+        document.getElementById('sendData').addEventListener('click', () => {
+            const data = {
+                name: document.getElementById('name').value,
+                condition: document.getElementById('condition').value,
+                access: document.getElementById('access').value,
+                security: document.getElementById('security').value,
+                coords: "Житомир, Украина" // Можно будет заменить на авто-геолокацию
+            };
+
+            if (!data.name) {
+                alert("Введите название объекта!");
+                return;
+            }
+
+            // Отправляем данные боту
+            tg.sendData(JSON.stringify(data));
+            tg.close(); // Закрываем приложение после отправки
+        });
+    </script>
+</body>
+</html>
