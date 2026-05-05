@@ -5,179 +5,116 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URBEX HUB</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <style>
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background-color: #1a1a1a; 
-            color: #e0e0e0; 
-            margin: 0; 
-            padding: 0; 
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Контейнер для контента */
-        .content {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            padding-bottom: 80px; /* Отступ под меню */
-        }
-
-        h2 { color: #ff4d4d; text-align: center; text-transform: uppercase; margin-top: 0; }
-        
+        body { font-family: 'Segoe UI', sans-serif; background-color: #1a1a1a; color: #e0e0e0; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+        .content { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 80px; }
+        h2 { color: #ff4d4d; text-align: center; text-transform: uppercase; }
         .form-group { margin-bottom: 15px; text-align: left; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        input, select { width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 10px; box-sizing: border-box; }
+        .main-btn { width: 100%; padding: 15px; background: #ff4d4d; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
         
-        input, select { 
-            width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; 
-            color: white; border-radius: 10px; box-sizing: border-box; 
-        }
+        /* Стили для списка объектов */
+        .card { background: #252525; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #ff4d4d; }
+        .card h3 { margin: 0 0 5px 0; color: #fff; font-size: 1.1em; }
+        .card p { margin: 3px 0; font-size: 0.85em; color: #aaa; }
 
-        button.main-btn { 
-            width: 100%; padding: 15px; background: #ff4d4d; color: white; 
-            border: none; border-radius: 10px; font-weight: bold; cursor: pointer; 
-            font-size: 1.1em; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
-        }
-
-        /* Нижнее навигационное меню */
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 65px;
-            background: #252525;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid #333;
-            padding-bottom: env(safe-area-inset-bottom); /* Поддержка iPhone */
-        }
-
-        .nav-item {
-            color: #888;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 0.75em;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: #252525; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #333; }
+        .nav-item { color: #888; text-decoration: none; display: flex; flex-direction: column; align-items: center; font-size: 0.75em; cursor: pointer; }
         .nav-item.active { color: #ff4d4d; }
-
-        .nav-icon { font-size: 1.5em; margin-bottom: 2px; }
-
-        .status { font-size: 0.8em; color: #666; text-align: center; margin-top: 15px; }
-
-        /* Скрытые разделы */
         .page { display: none; }
         .page.active { display: block; }
     </style>
 </head>
 <body>
 
-    <div class="content">
-        <!-- СТРАНИЦА: ДОБАВЛЕНИЕ (ГЛАВНАЯ) -->
-        <div id="add-page" class="page active">
-            <h2>📍 Новая точка</h2>
-            <div class="form-group">
-                <label>Название</label>
-                <input type="text" id="name" placeholder="Напр: Химволокно">
-            </div>
-            <div class="form-group">
-                <label>Состояние</label>
-                <select id="condition">
-                    <option value="Целый">Целый (люкс)</option>
-                    <option value="Средний">Средний</option>
-                    <option value="Руины">Руины</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Залаз</label>
-                <input type="text" id="access" placeholder="Окно, забор...">
-            </div>
-            <div class="form-group">
-                <label>Охрана</label>
-                <select id="security">
-                    <option value="Нет">Нет охраны</option>
-                    <option value="Есть">Есть охрана</option>
-                </select>
-            </div>
-            <button class="main-btn" id="sendData">ОТПРАВИТЬ В БАЗУ</button>
-            <div id="locationStatus" class="status">Определяем координаты...</div>
+<div class="content">
+    <!-- ГЛАВНАЯ -->
+    <div id="add-page" class="page active">
+        <h2>📍 Добавить точку</h2>
+        <div class="form-group"><input type="text" id="name" placeholder="Название"></div>
+        <div class="form-group">
+            <select id="condition">
+                <option value="Целый">Целый</option>
+                <option value="Средний">Средний</option>
+                <option value="Руины">Руины</option>
+            </select>
         </div>
-
-        <!-- СТРАНИЦА: КАРТА -->
-        <div id="map-page" class="page">
-            <h2>🗺 Карта объектов</h2>
-            <p style="text-align: center; color: #888;">Раздел в разработке...</p>
-        </div>
-
-        <!-- СТРАНИЦА: ПРОФИЛЬ -->
-        <div id="profile-page" class="page">
-            <h2>👤 Профиль</h2>
-            <p id="user-info" style="text-align: center;"></p>
-        </div>
+        <div class="form-group"><input type="text" id="access" placeholder="Залаз"></div>
+        <button class="main-btn" id="sendData">ОТПРАВИТЬ</button>
     </div>
 
-    <!-- НИЖНЕЕ МЕНЮ -->
-    <nav class="nav-bar">
-        <div class="nav-item active" onclick="showPage('add-page', this)">
-            <span class="nav-icon">➕</span>
-            <span>Добавить</span>
+    <!-- КАРТА (СПИСОК) -->
+    <div id="map-page" class="page">
+        <h2>🗺 Объекты в базе</h2>
+        <div id="locations-list">Загрузка данных...</div>
+    </div>
+
+    <!-- ПРОФИЛЬ -->
+    <div id="profile-page" class="page">
+        <h2>👤 Профиль</h2>
+        <div class="card" style="text-align: center;">
+            <p id="user-name" style="font-size: 1.2em; color: white;"></p>
+            <p>Статус: Исследователь</p>
+            <p id="stats-count">Загрузка статистики...</p>
         </div>
-        <div class="nav-item" onclick="showPage('map-page', this)">
-            <span class="nav-icon">🗺</span>
-            <span>Карта</span>
-        </div>
-        <div class="nav-item" onclick="showPage('profile-page', this)">
-            <span class="nav-icon">👤</span>
-            <span>Профиль</span>
-        </div>
-    </nav>
+    </div>
+</div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+<nav class="nav-bar">
+    <div class="nav-item active" onclick="showPage('add-page', this)"><span>➕</span><span>Добавить</span></div>
+    <div class="nav-item" onclick="showPage('map-page', this)"><span>🗺</span><span>Объекты</span></div>
+    <div class="nav-item" onclick="showPage('profile-page', this)"><span>👤</span><span>Профиль</span></div>
+</nav>
 
-        // Показ имени в профиле
-        document.getElementById('user-info').innerText = "Сталкер: " + (tg.initDataUnsafe.user?.first_name || "Аноним");
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-        let coords = "50.2547, 28.6587";
+    // КОНФИГУРАЦИЯ SUPABASE (для чтения данных прямо в приложении)
+    const SUPABASE_URL = "https://kyqdbhfnmkxukwehoepy.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5cWRiaGZubWt4dWt3ZWhvZXB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTY2NzksImV4cCI6MjA5MzU3MjY3OX0.ZMLy9PSIIpTxip0wfajdbpsbK4bE2Z8K7U7LXVb8gqo";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        navigator.geolocation.getCurrentPosition((pos) => {
-            coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
-            document.getElementById('locationStatus').innerText = "📍 Координаты определены";
-        });
+    document.getElementById('user-name').innerText = tg.initDataUnsafe.user?.first_name || "Сталкер";
 
-        // Переключение страниц
-        function showPage(pageId, element) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            
-            document.getElementById(pageId).classList.add('active');
-            element.classList.add('active');
+    async function loadData() {
+        const { data, error } = await supabase.from('locations').select('*').order('created_at', { ascending: false });
+        const listDiv = document.getElementById('locations-list');
+        const statsDiv = document.getElementById('stats-count');
+
+        if (data) {
+            listDiv.innerHTML = data.map(item => `
+                <div class="card">
+                    <h3>${item.name}</h3>
+                    <p>🏚 Состояние: ${item.condition}</p>
+                    <p>📍 Координаты: ${item['lat, lng']}</p>
+                </div>
+            `).join('');
+            statsDiv.innerText = `Всего объектов: ${data.length}`;
         }
+    }
 
-        document.getElementById('sendData').addEventListener('click', () => {
-            const name = document.getElementById('name').value;
-            if (!name) return alert("Введите название!");
+    function showPage(pageId, element) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        element.classList.add('active');
+        if (pageId === 'map-page' || pageId === 'profile-page') loadData();
+    }
 
-            const data = {
-                name: name,
-                condition: document.getElementById('condition').value,
-                access: document.getElementById('access').value,
-                security: document.getElementById('security').value,
-                coords: coords
-            };
+    document.getElementById('sendData').addEventListener('click', () => {
+        const name = document.getElementById('name').value;
+        if (!name) return alert("Введите название!");
+        tg.sendData(JSON.stringify({
+            name: name,
+            condition: document.getElementById('condition').value,
+            access: document.getElementById('access').value,
+            coords: "50.25, 28.65" // Пока статика для теста
+        }));
+    });
 
-            tg.sendData(JSON.stringify(data));
-        });
-    </script>
+    loadData(); // Первичная загрузка
+</script>
 </body>
 </html>
