@@ -58,49 +58,21 @@
         <input type="file" id="photo" accept="image/*">
     </div>
 
-    <button id="sendData">ОТПРАВИТЬ В БАЗУ</button>
-    <div id="locationStatus" class="status">Определяем адрес...</div>
+    document.getElementById('sendData').addEventListener('click', () => {
+    const name = document.getElementById('name').value;
+    if (!name) return alert("Введите название!");
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        let coords = "Житомир, Украина";
-
-        // Автоматическое получение координат
-        navigator.geolocation.getCurrentPosition((pos) => {
-            coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
-            document.getElementById('locationStatus').innerText = "📍 Координаты определены";
-        }, () => {
-            document.getElementById('locationStatus').innerText = "📍 Адрес: Житомир (центр)";
-        });
-
-        document.getElementById('sendData').addEventListener('click', () => {
-            const name = document.getElementById('name').value;
-            if (!name) return alert("Введите название!");
-
-            const photoFile = document.getElementById('photo').files[0];
-            
-            if (photoFile) {
-                const reader = new FileReader();
-                reader.onloadend = () => sendDataToBot(reader.result);
-                reader.readAsDataURL(photoFile);
-            } else {
-                sendDataToBot("");
-            }
-
-            function sendDataToBot(photoBase64) {
-                const data = {
-                    name: name,
-                    condition: document.getElementById('condition').value,
-                    access: document.getElementById('access').value,
-                    security: document.getElementById('security').value,
-                    coords: coords,
-                    photo: photoBase64
-                };
-                tg.sendData(JSON.stringify(data));
-                tg.close();
-            }
+    const data = {
+        name: name,
+        condition: document.getElementById('condition').value,
+        access: document.getElementById('access').value,
+        security: document.getElementById('security').value,
+        coords: coords // переменная с координатами из предыдущего шага
+    };
+    
+    console.log("Отправка данных:", data);
+    tg.sendData(JSON.stringify(data)); // Эта строка закрывает окно и шлет данные боту
+});
         });
     </script>
 </body>
