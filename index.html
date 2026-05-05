@@ -7,11 +7,11 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: sans-serif; background-color: #1a1a1a; color: #e0e0e0; padding: 20px; text-align: center; }
-        h2 { color: #ff4d4d; text-transform: uppercase; }
+        h2 { color: #ff4d4d; text-transform: uppercase; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; text-align: left; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
         input, select { width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #ff4d4d; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button { width: 100%; padding: 15px; background: #ff4d4d; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 1.1em; }
         .status { font-size: 0.8em; color: #888; margin-top: 15px; }
     </style>
 </head>
@@ -19,14 +19,14 @@
     <h2>📍 НОВАЯ ЛОКАЦИЯ</h2>
     
     <div class="form-group">
-        <label>Название</label>
-        <input type="text" id="name" placeholder="Напр: Завод">
+        <label>Название объекта</label>
+        <input type="text" id="name" placeholder="Напр: Завод 'Звезда'">
     </div>
 
     <div class="form-group">
-        <label>Состояние</label>
+        <label>Состояние (сохран)</label>
         <select id="condition">
-            <option value="Целый">Целый</option>
+            <option value="Целый">Целый (люкс)</option>
             <option value="Средний">Средний</option>
             <option value="Руины">Руины</option>
         </select>
@@ -34,26 +34,29 @@
 
     <div class="form-group">
         <label>Доступ (залаз)</label>
-        <input type="text" id="access" placeholder="Окно, забор...">
+        <input type="text" id="access" placeholder="Окно, дыра в заборе...">
     </div>
 
     <div class="form-group">
         <label>Охрана</label>
         <select id="security">
-            <option value="Нет">Нет</option>
-            <option value="Есть">Есть</option>
+            <option value="Нет">Нет охраны</option>
+            <option value="ЧОП/Сторож">ЧОП/Сторож</option>
+            <option value="Камеры">Камеры</option>
         </select>
     </div>
 
     <button id="sendData">ОТПРАВИТЬ В БАЗУ</button>
     <div id="locationStatus" class="status">Определяем координаты...</div>
 
+    <!-- ВСЕ ЧТО НИЖЕ — ЭТО СКРИПТ, ОН НЕ ДОЛЖЕН БЫТЬ ВИДЕН НА ЭКРАНЕ -->
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
         let coords = "50.2547, 28.6587"; // Житомир по умолчанию
 
+        // Запрашиваем реальное местоположение
         navigator.geolocation.getCurrentPosition((pos) => {
             coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
             document.getElementById('locationStatus').innerText = "📍 Координаты определены";
@@ -61,10 +64,12 @@
             document.getElementById('locationStatus').innerText = "📍 Локация: Житомир";
         });
 
+        // Обработка клика по кнопке
         document.getElementById('sendData').addEventListener('click', () => {
             const name = document.getElementById('name').value;
+            
             if (!name) {
-                alert("Введите название!");
+                alert("Введите название объекта!");
                 return;
             }
 
@@ -76,6 +81,7 @@
                 coords: coords
             };
 
+            // Отправляем данные боту (это закроет Mini App)
             tg.sendData(JSON.stringify(data));
         });
     </script>
